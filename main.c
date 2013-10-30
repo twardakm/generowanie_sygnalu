@@ -8,10 +8,11 @@ int main(void)
     p = (parametry *)malloc(sizeof(parametry));
     dane = (dane_do_wyswietlenia *)malloc(sizeof(dane_do_wyswietlenia));
 
+    ustaw_kodowanie();
     pobierz_dane(p);
     utworz_tablice(dane);
     generuj_sygnal(p, dane);
-    wyswietl_sygnal(p, dane, NULL, 0);
+    wyswietl_sygnal(p, dane);
 
     usun_tablice(dane);
     free(dane);

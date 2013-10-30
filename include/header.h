@@ -17,21 +17,19 @@ typedef struct
 {
     double *tab; //tablica przechowywania danych
     int czas;
-    double rozmiar_tablicy;
-    FILE *plik;
-    int czy_udalo_plik;
+    int rozmiar_tablicy;
 } dane_do_wyswietlenia;
 
 void utworz_tablice(dane_do_wyswietlenia *dane);
 void usun_tablice(dane_do_wyswietlenia *dane);
 void generuj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 void pobierz_dane(parametry *p);
-void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane, FILE * plik, int czy_do_pliku);
+void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 
 void utworz_tablice(dane_do_wyswietlenia *dane)
 {
     int i = 0;
-    dane->tab = (double *)malloc(sizeof(double) * dane->rozmiar_tablicy); //rozmiar tablicy częstotliwość próbkowania * czas
+    dane->tab = (int)((double *)malloc(sizeof(double) * dane->rozmiar_tablicy)); //rozmiar tablicy częstotliwość próbkowania * czas
 }
 
 void usun_tablice(dane_do_wyswietlenia *dane)
@@ -39,7 +37,7 @@ void usun_tablice(dane_do_wyswietlenia *dane)
     free(dane->tab);
 }
 
-void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane, FILE * plik, int czy_do_pliku)
+void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
     int i;
     printf("Podaj czas generowania sygnału [s]:");
@@ -52,11 +50,15 @@ void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane, FILE * plik, int 
     }
 }
 
-void pobierz_dane(parametry *p)
+void ustaw_kodowanie()
 {
     #ifdef WIN32
     system("chcp 65001");
     #endif
+}
+
+void pobierz_dane(parametry *p)
+{
     printf("GENEROWANIE SYGNAŁU\n--------------------\nPodaj dane\n");
     printf("Amplituda: ");
     scanf("%lf", &p->amplituda);
