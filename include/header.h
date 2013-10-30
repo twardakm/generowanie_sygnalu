@@ -48,6 +48,7 @@ void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane)
         case '2':
             break;
         case '0':
+            while (getchar() != '\n') {}
             wiadomosc_powitalna();
             return;
         default:
