@@ -3,7 +3,6 @@
 
 int main(void)
 {
-    int temp;
     parametry *p;
     dane_do_wyswietlenia *dane;
     p = (parametry *)malloc(sizeof(parametry));

@@ -16,43 +16,78 @@ typedef struct
 typedef struct
 {
     double *tab; //tablica przechowywania danych
-    int czas;
+    double czas;
     int rozmiar_tablicy;
 } dane_do_wyswietlenia;
 
-int wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane);
+void wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane);
+void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 void wiadomosc_powitalna();
-void utworz_tablice(dane_do_wyswietlenia *dane);
+void wiadomosc_dzialanie_sygnal();
+void utworz_tablice(parametry *p, dane_do_wyswietlenia *dane);
 void usun_tablice(dane_do_wyswietlenia *dane);
 void generuj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 void pobierz_dane(parametry *p);
 void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 
-int wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane)
+void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane)
+{
+    while (getchar() != '\n') {}
+    wiadomosc_dzialanie_sygnal();
+    int c;
+
+    while (c = getchar())
+    {
+        switch (c)
+        {
+        case '1':
+            utworz_tablice(p, dane);
+            generuj_sygnal(p, dane);
+            wyswietl_sygnal(p, dane);
+            break;
+        case '2':
+            break;
+        case '0':
+            wiadomosc_powitalna();
+            return;
+        default:
+            wiadomosc_dzialanie_sygnal();
+            break;
+        }
+    }
+}
+
+void wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane)
 {
     wiadomosc_powitalna();
     int c;
 
     while (c = getchar())
     {
-      switch (c)
-      {
-      case '1':
-          pobierz_dane(p);
-          utworz_tablice(dane);
-          generuj_sygnal(p, dane);
-          wyswietl_sygnal(p, dane);
-          break;
-      case '2':
-          break;
-      case '0':
-          printf("Dziękuję za skorzystanie z programu!\nMarcin Twardak\n");
-          return 0;
-      default:
-          wiadomosc_powitalna();
-          break;
-      }
+        switch (c)
+        {
+        case '1':
+            pobierz_dane(p);
+            wybierz_dzialanie_sygnal(p, dane);
+            break;
+        case '2':
+            break;
+        case '0':
+            printf("Dziękuję za skorzystanie z programu!\nMarcin Twardak\n");
+            return;
+        default:
+            wiadomosc_powitalna();
+            break;
+        }
     }
+}
+
+void wiadomosc_dzialanie_sygnal()
+{
+    printf("\nCo zrobić z sygnałem?\n"
+           "1 - Wyświetl sygnał\n"
+           "2 - Zapisz do pliku\n"
+           "0 - Powrót\n");
 }
 
 void wiadomosc_powitalna()
@@ -64,10 +99,12 @@ void wiadomosc_powitalna()
            "0 - Wyjdź\n");
 }
 
-void utworz_tablice(dane_do_wyswietlenia *dane)
+void utworz_tablice(parametry *p, dane_do_wyswietlenia *dane)
 {
-    int i = 0;
-    dane->tab = (int)((double *)malloc(sizeof(double) * dane->rozmiar_tablicy)); //rozmiar tablicy częstotliwość próbkowania * czas
+    printf("Podaj czas generowania sygnału [s]:");
+    scanf("%lf", &dane->czas);
+    dane->rozmiar_tablicy = (int)(p->fp * dane->czas);
+    dane->tab = ((double *)malloc(sizeof(double) * dane->rozmiar_tablicy)); //rozmiar tablicy częstotliwość próbkowania * czas
 }
 
 void usun_tablice(dane_do_wyswietlenia *dane)
@@ -78,8 +115,6 @@ void usun_tablice(dane_do_wyswietlenia *dane)
 void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
     int i;
-    printf("Podaj czas generowania sygnału [s]:");
-    scanf("%d", &dane->czas);
     dane->rozmiar_tablicy = p->fp * (double)dane->czas;
 
     for (i = 0; i < dane->rozmiar_tablicy; i++)
