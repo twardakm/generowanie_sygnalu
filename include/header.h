@@ -20,11 +20,49 @@ typedef struct
     int rozmiar_tablicy;
 } dane_do_wyswietlenia;
 
+int wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane);
+void wiadomosc_powitalna();
 void utworz_tablice(dane_do_wyswietlenia *dane);
 void usun_tablice(dane_do_wyswietlenia *dane);
 void generuj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 void pobierz_dane(parametry *p);
 void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane);
+
+int wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane)
+{
+    wiadomosc_powitalna();
+    int c;
+
+    while (c = getchar())
+    {
+      switch (c)
+      {
+      case '1':
+          pobierz_dane(p);
+          utworz_tablice(dane);
+          generuj_sygnal(p, dane);
+          wyswietl_sygnal(p, dane);
+          break;
+      case '2':
+          break;
+      case '0':
+          printf("Dziękuję za skorzystanie z programu!\nMarcin Twardak\n");
+          return 0;
+      default:
+          wiadomosc_powitalna();
+          break;
+      }
+    }
+}
+
+void wiadomosc_powitalna()
+{
+    printf("\n-------------------\nGENEROWANIE SYGNAŁU\n-------------------\n\n");
+    printf("Wybierz:\n"
+           "1 - Wygeneruj sygnał\n"
+           "2 - Wyświetl sygnał z pliku\n"
+           "0 - Wyjdź\n");
+}
 
 void utworz_tablice(dane_do_wyswietlenia *dane)
 {
@@ -59,7 +97,7 @@ void ustaw_kodowanie()
 
 void pobierz_dane(parametry *p)
 {
-    printf("GENEROWANIE SYGNAŁU\n--------------------\nPodaj dane\n");
+    printf("Podaj dane\n");
     printf("Amplituda: ");
     scanf("%lf", &p->amplituda);
     printf("Częstotliwość sygnału: ");
