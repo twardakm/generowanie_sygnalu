@@ -54,15 +54,10 @@ void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane)
             break;
         case '3':  //zaszumianie sygnału
             if (dane->czy_zaszumiony)
-            {
                 printf("Sygnał został już zaszumiony. Niedozwolona operacja.");
-                break;
-            }
             else
-            {
                 dane->czy_zaszumiony = zaszum_sygnal(p, dane);
-                break;
-            }
+            break;
         case '0':
             while (getchar() != '\n') {}
             wiadomosc_powitalna();
@@ -120,8 +115,8 @@ void wiadomosc_powitalna()
 
 int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
-    double procent; //jak bardzo ma być zaszumiony sygnał
-    int i, temp;
+    double procent, temp; //jak bardzo ma być zaszumiony sygnał
+    int i;
     printf("Podaj w % wartość zaszumienia: (powyżej 0)\n");
     scanf("%lf", &procent);
     if (procent < 0)
@@ -131,11 +126,13 @@ int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane)
         return 0;
     }
 
-    temp = p->amplituda * 100 * procent;
+    procent /= 100.;
+
+    temp = p->amplituda * procent;
     for (i = 0; i < dane->rozmiar_tablicy; i++)
     {
-        dane->tab[i] += (double)(temp / 100.);
-        dane->tab[i] -= (rand() % temp) / 100 / 2;
+        dane->tab[i] += temp / 2.;
+        dane->tab[i] -= (double)((rand() % (int)(temp*1000))/1000.);
     }
     return 1;
 }
@@ -162,7 +159,7 @@ void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 
     for (i = 0; i < dane->rozmiar_tablicy; i++)
     {
-        printf("%lf \n", dane->tab[i]);
+        printf("%.4f \n", dane->tab[i]);
     }
 }
 
