@@ -120,7 +120,6 @@ void wiadomosc_powitalna()
 
 int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
-    srand (time(NULL)); //inicjalizacja pseudolosowania
     double procent; //jak bardzo ma być zaszumiony sygnał
     int i, temp;
     printf("Podaj w % wartość zaszumienia: (powyżej 0)\n");
