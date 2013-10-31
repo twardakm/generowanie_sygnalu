@@ -21,6 +21,10 @@ typedef struct
     int rozmiar_tablicy;
     int czy_zaszumiony;
     int czy_odfiltrowany;
+
+    //obsługa plików
+    FILE *plik;
+    char nazwa_pliku[30];
 } dane_do_wyswietlenia;
 
 void wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane);
@@ -33,6 +37,7 @@ void generuj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 void pobierz_dane(parametry *p);
 void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane);
+int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 
 void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
@@ -51,6 +56,7 @@ void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane)
             wyswietl_sygnal(p, dane);
             break;
         case '2':
+            zapisz_sygnal(p, dane);
             break;
         case '3':  //zaszumianie sygnału
             if (dane->czy_zaszumiony)
@@ -111,6 +117,15 @@ void wiadomosc_powitalna()
            "1 - Wygeneruj sygnał\n"
            "2 - Wyświetl sygnał z pliku\n"
            "0 - Wyjdź\n");
+}
+
+int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane)
+{
+    printf("Podaj nazwę pliku do którego zapisać sygnał (maksymalnie 30 znaków):\n");
+    scanf("%s", dane->nazwa_pliku);
+    dane->plik = fopen(dane->nazwa_pliku, "w");
+    fprintf(dane->plik, "Działa ;)");
+    return 0;
 }
 
 int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane)
