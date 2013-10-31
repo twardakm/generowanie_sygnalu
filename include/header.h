@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
+
+#define MAX_FILE_LENGHT 30
 
 typedef struct
 {
@@ -24,7 +27,7 @@ typedef struct
 
     //obsługa plików
     FILE *plik;
-    char nazwa_pliku[30];
+    char nazwa_pliku[MAX_FILE_LENGHT];
 } dane_do_wyswietlenia;
 
 void wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane);
@@ -121,10 +124,27 @@ void wiadomosc_powitalna()
 
 int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
-    printf("Podaj nazwę pliku do którego zapisać sygnał (maksymalnie 30 znaków):\n");
-    scanf("%s", dane->nazwa_pliku);
-    dane->plik = fopen(dane->nazwa_pliku, "w");
+    printf("Podaj nazwę pliku do którego zapisać sygnał (maksymalnie %d znaków):\n", MAX_FILE_LENGHT);
+    while (getchar() != '\n') {}
+    int i = 0;
+
+    fgets(dane->nazwa_pliku, MAX_FILE_LENGHT, stdin);
+    *(strchr(dane->nazwa_pliku, '\n')) = '\0';
+
+    printf("Nazwa pliku: %s", dane->nazwa_pliku);
+
+    if ((dane->plik = fopen(dane->nazwa_pliku, "w")) == NULL)
+    {
+        fprintf(stderr, "Nie udało się utworzyć podanego pliku\n"); //zamiast perror, żeby sprawdzić jak działa
+        return 1;
+    }
     fprintf(dane->plik, "Działa ;)");
+    fclose(dane->plik);
+    if (ferror(dane->plik))
+    {
+        fprintf(stderr, "Błąd zapisu do pliku\n");
+        return 2;
+    }
     return 0;
 }
 
