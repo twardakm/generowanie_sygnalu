@@ -117,7 +117,11 @@ int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
     double procent, temp; //jak bardzo ma być zaszumiony sygnał
     int i;
+#ifdef WIN32
+    printf("Podaj w %c wartość zaszumienia: (powyżej 0)\n", 37);
+#else
     printf("Podaj w % wartość zaszumienia: (powyżej 0)\n");
+#endif
     scanf("%lf", &procent);
     if (procent < 0)
     {
