@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 
 typedef struct
 {
@@ -18,6 +19,8 @@ typedef struct
     double *tab; //tablica przechowywania danych
     double czas;
     int rozmiar_tablicy;
+    int czy_zaszumiony;
+    int czy_odfiltrowany;
 } dane_do_wyswietlenia;
 
 void wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane);
@@ -29,9 +32,13 @@ void usun_tablice(dane_do_wyswietlenia *dane);
 void generuj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 void pobierz_dane(parametry *p);
 void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane);
+int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 
 void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
+    utworz_tablice(p, dane);
+    generuj_sygnal(p, dane);
+
     while (getchar() != '\n') {}
     wiadomosc_dzialanie_sygnal();
     int c;
@@ -41,12 +48,21 @@ void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane)
         switch (c)
         {
         case '1':
-            utworz_tablice(p, dane);
-            generuj_sygnal(p, dane);
             wyswietl_sygnal(p, dane);
             break;
         case '2':
             break;
+        case '3':  //zaszumianie sygnału
+            if (dane->czy_zaszumiony)
+            {
+                printf("Sygnał został już zaszumiony. Niedozwolona operacja.");
+                break;
+            }
+            else
+            {
+                dane->czy_zaszumiony = zaszum_sygnal(p, dane);
+                break;
+            }
         case '0':
             while (getchar() != '\n') {}
             wiadomosc_powitalna();
@@ -88,6 +104,8 @@ void wiadomosc_dzialanie_sygnal()
     printf("\nCo zrobić z sygnałem?\n"
            "1 - Wyświetl sygnał\n"
            "2 - Zapisz do pliku\n"
+           "3 - Zaszum sygnał\n"
+           "4 - Odfiltruj sygnał\n"
            "0 - Powrót\n");
 }
 
@@ -100,12 +118,37 @@ void wiadomosc_powitalna()
            "0 - Wyjdź\n");
 }
 
+int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane)
+{
+    srand (time(NULL)); //inicjalizacja pseudolosowania
+    double procent; //jak bardzo ma być zaszumiony sygnał
+    int i, temp;
+    printf("Podaj w % wartość zaszumienia: (powyżej 0)\n");
+    scanf("%lf", &procent);
+    if (procent < 0)
+    {
+        printf("Miało być większe od 0!\n");
+        while (getchar() != '\n') {}
+        return 0;
+    }
+
+    temp = p->amplituda * 100 * procent;
+    for (i = 0; i < dane->rozmiar_tablicy; i++)
+    {
+        dane->tab[i] += (double)(temp / 100.);
+        dane->tab[i] -= (rand() % temp) / 100 / 2;
+    }
+    return 1;
+}
+
 void utworz_tablice(parametry *p, dane_do_wyswietlenia *dane)
 {
     printf("Podaj czas generowania sygnału [s]:");
     scanf("%lf", &dane->czas);
     dane->rozmiar_tablicy = (int)(p->fp * dane->czas);
     dane->tab = ((double *)malloc(sizeof(double) * dane->rozmiar_tablicy)); //rozmiar tablicy częstotliwość próbkowania * czas
+    dane->czy_odfiltrowany = 0;
+    dane->czy_zaszumiony = 0;
 }
 
 void usun_tablice(dane_do_wyswietlenia *dane)

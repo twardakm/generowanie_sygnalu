@@ -8,6 +8,8 @@ int main(void)
     p = (parametry *)malloc(sizeof(parametry));
     dane = (dane_do_wyswietlenia *)malloc(sizeof(dane_do_wyswietlenia));
 
+    srand (time(NULL)); //inicjalizacja pseudolosowania
+
     ustaw_kodowanie(); //konieczne do wyświetlenia polskich znaków w Windows
 
     wybierz_dzialanie_powitalne(p, dane);
