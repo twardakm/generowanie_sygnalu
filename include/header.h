@@ -158,11 +158,22 @@ void odczytaj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
      *LINIA 4 - częstotliwość próbkowania
      *LINIA 5 - przesunięcie
      *# - komentarz, linia pomijalna*/
+    char ctemp;
+    //odczyt daty
     if (sprawdz_czy_komentarz(dane)) // różna od 0 to błąd
         return;
-    char *Temp = malloc(sizeof(char) * 50);
-    fgets(Temp, 50, dane->plik);
-    printf("Dane: %s", Temp);
+    printf("Data wygenerowania sygnału: ");
+    while ((ctemp = fgetc(dane->plik)) != '\n')
+        printf("%c", ctemp);
+    //odczyt amplitudy
+    if (sprawdz_czy_komentarz(dane)) // różna od 0 to błąd
+        return;
+    printf("\nAmplituda: ");
+    while(fgetc(dane->plik) != '\t') {} //usunięcie z pliku
+    fscanf(dane->plik, "%lf", &p->amplituda);
+    /*fputs(cctemp, stdin);
+    scanf("%lf", temp)*/
+    printf("%.4f", p->amplituda);
     fclose(dane->plik);
 }
 
