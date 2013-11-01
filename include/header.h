@@ -39,6 +39,7 @@ void usun_tablice(dane_do_wyswietlenia *dane);
 void generuj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 void pobierz_dane(parametry *p);
 void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane);
+void wygeneruj_date(char *dzien_miesaca, char *miesiac, char *rok);
 int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 
@@ -115,15 +116,29 @@ void wiadomosc_dzialanie_sygnal()
 
 void wiadomosc_powitalna()
 {
+    struct tm czas;
     printf("\n-------------------\nGENEROWANIE SYGNAŁU\n-------------------\n\n");
     printf("Wybierz:\n"
            "1 - Wygeneruj sygnał\n"
            "2 - Wyświetl sygnał z pliku\n"
            "0 - Wyjdź\n");
+
+    printf("Generowanie daty\n");
+
+    time_t *tp = malloc (sizeof(time_t));
+    time(tp);
+    /*char *dzien_miesiaca = malloc(sizeof(char) * 50);
+    strftime (dzien_miesiaca, 50, "%S", czas);*/
+
+    printf("Dzień: %s\n", ctime(tp));
 }
 
 int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
+    char dzien_miesiaca[2];
+    char miesiac[2];
+    char rok[4];
+
     printf("Podaj nazwę pliku do którego zapisać sygnał (maksymalnie %d znaków):\n", MAX_FILE_LENGHT);
     while (getchar() != '\n') {}
     int i = 0;
@@ -131,22 +146,30 @@ int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane)
     fgets(dane->nazwa_pliku, MAX_FILE_LENGHT, stdin);
     *(strchr(dane->nazwa_pliku, '\n')) = '\0';
 
-    printf("Nazwa pliku: %s", dane->nazwa_pliku);
-
     if ((dane->plik = fopen(dane->nazwa_pliku, "w")) == NULL)
     {
         fprintf(stderr, "Nie udało się utworzyć podanego pliku\n"); //zamiast perror, żeby sprawdzić jak działa
         return 1;
     }
-    fprintf(dane->plik, "Działa ;)");
+    //wygeneruj_date(&dzien_miesiaca, &miesiac, &rok);
+
+
+    //fprintf(dane->plik, "# Sygnał wygenerowano dnia:\n%s", dzien_miesiaca);
     fclose(dane->plik);
     if (ferror(dane->plik))
     {
         fprintf(stderr, "Błąd zapisu do pliku\n");
         return 2;
     }
+    printf("Zapisano do pliku: %s", dane->nazwa_pliku);
     return 0;
 }
+
+/*void wygeneruj_date(char *dzien_miesiaca, char *miesiac, char *rok)
+{
+    struct tm czas;
+    strftime(dzien_miesiaca, 2, "%d", &czas);
+}*/
 
 int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
