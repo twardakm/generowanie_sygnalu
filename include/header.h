@@ -28,6 +28,7 @@ typedef struct
     //obsługa plików
     FILE *plik;
     char nazwa_pliku[MAX_FILE_LENGHT];
+    struct tm *data;
 } dane_do_wyswietlenia;
 
 void wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane);
@@ -39,7 +40,7 @@ void usun_tablice(dane_do_wyswietlenia *dane);
 void generuj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 void pobierz_dane(parametry *p);
 void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane);
-void wygeneruj_date(char *dzien_miesaca, char *miesiac, char *rok);
+void wygeneruj_date(char *dzien_miesaca, char *miesiac, char *rok, dane_do_wyswietlenia *dane);
 int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 
@@ -125,6 +126,7 @@ void wiadomosc_powitalna()
            "1 - Wygeneruj sygnał\n"
            "2 - Wyświetl sygnał z pliku\n"
            "0 - Wyjdź\n");
+    free(tp);
 }
 
 int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane)
@@ -135,7 +137,6 @@ int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 
     printf("Podaj nazwę pliku do którego zapisać sygnał (maksymalnie %d znaków):\n", MAX_FILE_LENGHT);
     while (getchar() != '\n') {}
-    int i = 0;
 
     fgets(dane->nazwa_pliku, MAX_FILE_LENGHT, stdin);
     *(strchr(dane->nazwa_pliku, '\n')) = '\0';
@@ -145,9 +146,9 @@ int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane)
         fprintf(stderr, "Nie udało się utworzyć podanego pliku\n"); //zamiast perror, żeby sprawdzić jak działa
         return 1;
     }
-    wygeneruj_date(dzien_miesiaca, miesiac, rok);
+    wygeneruj_date(dzien_miesiaca, miesiac, rok, dane);
 
-    fprintf(dane->plik, "# Sygnał wygenerowano dnia:\n%s", dzien_miesiaca);
+    fprintf(dane->plik, "# Sygnał wygenerowano dnia:\n%s.%s.%s\n", dzien_miesiaca, miesiac, rok);
     fclose(dane->plik);
     if (ferror(dane->plik))
     {
@@ -155,16 +156,24 @@ int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane)
         return 2;
     }
     printf("Zapisano do pliku: %s", dane->nazwa_pliku);
+
+    free(rok);
+    free(miesiac);
+    free(dzien_miesiaca);
     return 0;
 }
 
-void wygeneruj_date(char *dzien_miesiaca, char *miesiac, char *rok)
+void wygeneruj_date(char *dzien_miesiaca, char *miesiac, char *rok, dane_do_wyswietlenia *dane)
 {
-    struct tm *czas = malloc(sizeof(struct tm));
-    time_t *tp = malloc (sizeof(time_t));
+    time_t *tp = malloc(sizeof(time_t));
     time(tp); //wygenerowanie czasu
-    czas = localtime(tp); //przekopiowanie do struktury tm
-    strftime(dzien_miesiaca, 3, "%d", czas);
+    dane->data = localtime(tp); //przekopiowanie do struktury tm
+
+    strftime(dzien_miesiaca, 3, "%d", dane->data);
+    strftime(miesiac, 3, "%m", dane->data);
+    strftime(rok, 5, "%Y", dane->data);
+
+    free(tp);
 }
 
 int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane)
@@ -201,6 +210,7 @@ void utworz_tablice(parametry *p, dane_do_wyswietlenia *dane)
     scanf("%lf", &dane->czas);
     dane->rozmiar_tablicy = (int)(p->fp * dane->czas);
     dane->tab = ((double *)malloc(sizeof(double) * dane->rozmiar_tablicy)); //rozmiar tablicy częstotliwość próbkowania * czas
+    dane->data = malloc(sizeof(struct tm));
     dane->czy_odfiltrowany = 0;
     dane->czy_zaszumiony = 0;
 }
