@@ -116,28 +116,22 @@ void wiadomosc_dzialanie_sygnal()
 
 void wiadomosc_powitalna()
 {
-    struct tm czas;
-    printf("\n-------------------\nGENEROWANIE SYGNAŁU\n-------------------\n\n");
+    time_t *tp = malloc (sizeof(time_t));
+    time(tp);
+
+    printf("\n-------------------\nGENEROWANIE SYGNAŁU\n-------------------\n");
+    printf("%s\n\n", ctime(tp));
     printf("Wybierz:\n"
            "1 - Wygeneruj sygnał\n"
            "2 - Wyświetl sygnał z pliku\n"
            "0 - Wyjdź\n");
-
-    printf("Generowanie daty\n");
-
-    time_t *tp = malloc (sizeof(time_t));
-    time(tp);
-    /*char *dzien_miesiaca = malloc(sizeof(char) * 50);
-    strftime (dzien_miesiaca, 50, "%S", czas);*/
-
-    printf("Dzień: %s\n", ctime(tp));
 }
 
 int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
-    char dzien_miesiaca[2];
-    char miesiac[2];
-    char rok[4];
+    char *dzien_miesiaca = malloc(sizeof(char) * 3);
+    char *miesiac = malloc(sizeof(char) * 3);
+    char *rok = malloc(sizeof(char) * 5);
 
     printf("Podaj nazwę pliku do którego zapisać sygnał (maksymalnie %d znaków):\n", MAX_FILE_LENGHT);
     while (getchar() != '\n') {}
@@ -151,10 +145,9 @@ int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane)
         fprintf(stderr, "Nie udało się utworzyć podanego pliku\n"); //zamiast perror, żeby sprawdzić jak działa
         return 1;
     }
-    //wygeneruj_date(&dzien_miesiaca, &miesiac, &rok);
+    wygeneruj_date(dzien_miesiaca, miesiac, rok);
 
-
-    //fprintf(dane->plik, "# Sygnał wygenerowano dnia:\n%s", dzien_miesiaca);
+    fprintf(dane->plik, "# Sygnał wygenerowano dnia:\n%s", dzien_miesiaca);
     fclose(dane->plik);
     if (ferror(dane->plik))
     {
@@ -165,11 +158,14 @@ int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane)
     return 0;
 }
 
-/*void wygeneruj_date(char *dzien_miesiaca, char *miesiac, char *rok)
+void wygeneruj_date(char *dzien_miesiaca, char *miesiac, char *rok)
 {
-    struct tm czas;
-    strftime(dzien_miesiaca, 2, "%d", &czas);
-}*/
+    struct tm *czas = malloc(sizeof(struct tm));
+    time_t *tp = malloc (sizeof(time_t));
+    time(tp); //wygenerowanie czasu
+    czas = localtime(tp); //przekopiowanie do struktury tm
+    strftime(dzien_miesiaca, 3, "%d", czas);
+}
 
 int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
