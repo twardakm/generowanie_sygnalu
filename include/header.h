@@ -38,12 +38,13 @@ void wiadomosc_dzialanie_sygnal();
 void utworz_tablice(parametry *p, dane_do_wyswietlenia *dane);
 void usun_tablice(dane_do_wyswietlenia *dane);
 void generuj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
+int filtruj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 void pobierz_dane(parametry *p);
 void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 void wygeneruj_date(char *dzien_miesaca, char *miesiac, char *rok, dane_do_wyswietlenia *dane);
 int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane);
-void odczytaj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
+int odczytaj_sygnal(parametry *p, dane_do_wyswietlenia *dane); //0 - przy poprawnym odczytaniu
 /*sprawdza czy dana linia jest komentarzem, jeśli tak przechodzi do nowej linii.
  *Jeśli nie wraca na dawną pozycję.
  *W przypadku błędu zwraca wartość różną od 0*/
@@ -74,6 +75,12 @@ void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane)
             else
                 dane->czy_zaszumiony = zaszum_sygnal(p, dane);
             break;
+        case '4':
+            if (dane->czy_odfiltrowany)
+                printf("Sygnał został już odfiltrowany. Niedozwolona operacja.");
+            else
+                dane->czy_odfiltrowany = filtruj_sygnal(p, dane);
+            break;
         case '0':
             while (getchar() != '\n') {}
             wiadomosc_powitalna();
@@ -99,7 +106,8 @@ void wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane)
             wybierz_dzialanie_sygnal(p, dane);
             break;
         case '2':
-            odczytaj_sygnal(p, dane);
+            if (!odczytaj_sygnal(p, dane))
+                wybierz_dzialanie_sygnal(p, dane);
             break;
         case '0':
             printf("Dziękuję za skorzystanie z programu!\nMarcin Twardak\n");
@@ -135,7 +143,7 @@ void wiadomosc_powitalna()
     free(tp);
 }
 
-void odczytaj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
+int odczytaj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
     printf("Podaj nazwę pliku z którego odczytać sygnał (maksymalnie %d znaków):\n", MAX_FILE_LENGHT);
     while (getchar() != '\n') {}
@@ -147,7 +155,7 @@ void odczytaj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
     if((dane->plik = fopen(dane->nazwa_pliku, "r")) == NULL)
     {
         perror("Nie udało się otworzyć podanego pliku\n");
-        return;
+        return 1;
     }
     else
         printf("OK\n");
@@ -159,22 +167,45 @@ void odczytaj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
      *LINIA 5 - przesunięcie
      *# - komentarz, linia pomijalna*/
     char ctemp;
+
     //odczyt daty
     if (sprawdz_czy_komentarz(dane)) // różna od 0 to błąd
         return;
-    printf("Data wygenerowania sygnału: ");
+    printf("Data wygenerowania sygnału:\t");
     while ((ctemp = fgetc(dane->plik)) != '\n')
         printf("%c", ctemp);
     //odczyt amplitudy
     if (sprawdz_czy_komentarz(dane)) // różna od 0 to błąd
         return;
-    printf("\nAmplituda: ");
+    printf("\nAmplituda:\t\t\t");
     while(fgetc(dane->plik) != '\t') {} //usunięcie z pliku
     fscanf(dane->plik, "%lf", &p->amplituda);
-    /*fputs(cctemp, stdin);
-    scanf("%lf", temp)*/
     printf("%.4f", p->amplituda);
+    //odczyt częstotliwości sygnału
+    if (sprawdz_czy_komentarz(dane)) // różna od 0 to błąd
+        return;
+    printf("\nCzęstotliwość sygnału:\t\t");
+    while(fgetc(dane->plik) != '\t') {} //usunięcie z pliku
+    fscanf(dane->plik, "%lf", &p->fs);
+    printf("%.4f", p->fs);
+    //odczyt częstotliwości próbkowania
+    if (sprawdz_czy_komentarz(dane)) // różna od 0 to błąd
+        return;
+    printf("\nCzęstotliwość próbkowania:\t");
+    while(fgetc(dane->plik) != '\t') {} //usunięcie z pliku
+    fscanf(dane->plik, "%lf", &p->fp);
+    printf("%.4f", p->fp);
+    //odczyt przesunięcia fazowego
+    if (sprawdz_czy_komentarz(dane)) // różna od 0 to błąd
+        return;
+    printf("\nPrzesunięcie fazowe:\t\t");
+    while(fgetc(dane->plik) != '\t') {} //usunięcie z pliku
+    fscanf(dane->plik, "%lf", &p->fi);
+    printf("%.4f\n", p->fi);
+
     fclose(dane->plik);
+
+    return 0;
 }
 
 int sprawdz_czy_komentarz(dane_do_wyswietlenia *dane)
@@ -269,6 +300,39 @@ int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane)
         dane->tab[i] += temp / 2.;
         dane->tab[i] -= (double)((rand() % (int)(temp*1000))/1000.);
     }
+    return 1;
+}
+
+int filtruj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
+{
+    int wsp, i, j; //współczynnik uśredniania
+    wsp = -1;
+    do {
+        if (wsp != -1)
+            printf("Ilość wygenerowanych próbek musi być wielokrotnością próbek uśredniania\nIlość wygenerowanych próbek: %d", dane->rozmiar_tablicy);
+        printf("Filtrowanie sygnału\nZ ilu próbek uśrednić: ");
+        scanf ("%d\n", &wsp);
+    } while (dane->rozmiar_tablicy % wsp != 0);
+    i = 0;
+    j = 0;
+    while (i < (dane->rozmiar_tablicy - wsp / 2))
+    {
+        if (i % wsp == 0)
+        {
+            j = i;
+            i++;
+            for(; i % wsp != 0; i++)
+                dane->tab[j] += dane->tab[i];
+            dane->tab[j] /= wsp;
+            do
+            {
+                dane->tab[j + 1] = dane->tab[j];
+                j++;
+            } while ((j+1) % wsp != 0);
+
+        }
+    }
+    wyswietl_sygnal(p, dane);
     return 1;
 }
 
