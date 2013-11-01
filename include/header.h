@@ -148,7 +148,12 @@ int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane)
     }
     wygeneruj_date(dzien_miesiaca, miesiac, rok, dane);
 
-    fprintf(dane->plik, "# Sygnał wygenerowano dnia:\n%s.%s.%s\n", dzien_miesiaca, miesiac, rok);
+    fprintf(dane->plik, "# Sygnał wygenerowano dnia:\n%s.%s.%s\n"
+            "amplituda:\t%.4f\n"
+            "czest. sygn.:\t%.4f\n"
+            "czest. prob.:\t%.4f\n"
+            "przesuniecie:\t%.4f\n",
+            dzien_miesiaca, miesiac, rok, p->amplituda, p->fs, p->fp, p->fi);
     fclose(dane->plik);
     if (ferror(dane->plik))
     {
