@@ -43,6 +43,11 @@ void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 void wygeneruj_date(char *dzien_miesaca, char *miesiac, char *rok, dane_do_wyswietlenia *dane);
 int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane);
+void odczytaj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
+/*sprawdza czy dana linia jest komentarzem, jeśli tak przechodzi do nowej linii.
+ *Jeśli nie wraca na dawną pozycję.
+ *W przypadku błędu zwraca wartość różną od 0*/
+int sprawdz_czy_komentarz(dane_do_wyswietlenia *dane);
 
 void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
@@ -94,6 +99,7 @@ void wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane)
             wybierz_dzialanie_sygnal(p, dane);
             break;
         case '2':
+            odczytaj_sygnal(p, dane);
             break;
         case '0':
             printf("Dziękuję za skorzystanie z programu!\nMarcin Twardak\n");
@@ -127,6 +133,52 @@ void wiadomosc_powitalna()
            "2 - Wyświetl sygnał z pliku\n"
            "0 - Wyjdź\n");
     free(tp);
+}
+
+void odczytaj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
+{
+    printf("Podaj nazwę pliku z którego odczytać sygnał (maksymalnie %d znaków):\n", MAX_FILE_LENGHT);
+    while (getchar() != '\n') {}
+    fgets(dane->nazwa_pliku, MAX_FILE_LENGHT, stdin);
+    *(strchr(dane->nazwa_pliku, '\n')) = '\0';
+    printf("Otwieranie pliku... %s ", dane->nazwa_pliku);
+    //otwarcie podanego pliku w trybie do odczytu
+
+    if((dane->plik = fopen(dane->nazwa_pliku, "r")) == NULL)
+    {
+        perror("Nie udało się otworzyć podanego pliku\n");
+        return;
+    }
+    else
+        printf("OK\n");
+    printf("Odczytano dane:\n");
+    /*LINIA 1 - data
+     *LINIA 2 - amplituda
+     *LINIA 3 - częstotliwość sygnału
+     *LINIA 4 - częstotliwość próbkowania
+     *LINIA 5 - przesunięcie
+     *# - komentarz, linia pomijalna*/
+    if (sprawdz_czy_komentarz(dane)) // różna od 0 to błąd
+        return;
+    char *Temp = malloc(sizeof(char) * 50);
+    fgets(Temp, 50, dane->plik);
+    printf("Dane: %s", Temp);
+    fclose(dane->plik);
+}
+
+int sprawdz_czy_komentarz(dane_do_wyswietlenia *dane)
+{
+    while (fgetc(dane->plik) == '#')
+    {
+        while(fgetc(dane->plik) != '\n') {} // żeby przeszkoczyć całą linię
+    }
+    if (!fseek(dane->plik, ftell(dane->plik) - 1, SEEK_SET))
+        return 0;
+    else
+    {
+        printf("Błąd odczyt z pliku\n");
+        return 1;
+    }
 }
 
 int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane)
