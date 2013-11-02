@@ -309,9 +309,9 @@ int filtruj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
     wsp = -1;
     do {
         if (wsp != -1)
-            printf("Ilość wygenerowanych próbek musi być wielokrotnością próbek uśredniania\nIlość wygenerowanych próbek: %d", dane->rozmiar_tablicy);
+            printf("Ilość wygenerowanych próbek musi być wielokrotnością próbek uśredniania\nIlość wygenerowanych próbek: %d\n", dane->rozmiar_tablicy);
         printf("Filtrowanie sygnału\nZ ilu próbek uśrednić: ");
-        scanf ("%d\n", &wsp);
+        scanf ("%d", &wsp);
     } while (dane->rozmiar_tablicy % wsp != 0);
     i = 0;
     j = 0;
