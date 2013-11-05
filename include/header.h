@@ -79,7 +79,10 @@ void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane)
             if (dane->czy_odfiltrowany)
                 printf("Sygnał został już odfiltrowany. Niedozwolona operacja.");
             else
+            {
                 dane->czy_odfiltrowany = filtruj_sygnal(p, dane);
+                wyswietl_sygnal(p, dane);
+            }
             break;
         case '0':
             while (getchar() != '\n') {}
@@ -306,33 +309,23 @@ int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 int filtruj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
     int wsp, i, j; //współczynnik uśredniania
-    wsp = -1;
-    do {
-        if (wsp != -1)
-            printf("Ilość wygenerowanych próbek musi być wielokrotnością próbek uśredniania\nIlość wygenerowanych próbek: %d\n", dane->rozmiar_tablicy);
-        printf("Filtrowanie sygnału\nZ ilu próbek uśrednić: ");
-        scanf ("%d", &wsp);
-    } while (dane->rozmiar_tablicy % wsp != 0);
-    i = 0;
-    j = 0;
-    while (i < (dane->rozmiar_tablicy - wsp / 2))
-    {
-        if (i % wsp == 0)
-        {
-            j = i;
-            i++;
-            for(; i % wsp != 0; i++)
-                dane->tab[j] += dane->tab[i];
-            dane->tab[j] /= wsp;
-            do
-            {
-                dane->tab[j + 1] = dane->tab[j];
-                j++;
-            } while ((j+1) % wsp != 0);
+    printf("Filtrowanie sygnału\nZ ilu próbek uśrednić: ");
+    scanf ("%d", &wsp);
 
-        }
+    double *temp;
+    temp = malloc(sizeof(double) * (int)(dane->rozmiar_tablicy - 1 - (int)(wsp / 2))); //-1 bo tablica liczy się od 0
+    for (i = 0; i < (int)(dane->rozmiar_tablicy - 1) - (int)(wsp / 2); i++)
+    {
+        temp[i] = 0;
+        for (j = i; j < i + wsp; j++)
+            temp[i] += dane->tab[j];
+        temp[i] /= wsp;
     }
-    wyswietl_sygnal(p, dane);
+    dane->rozmiar_tablicy = dane->rozmiar_tablicy - 1 - (int)(wsp / 2);
+    dane->tab = realloc(dane->tab, sizeof(double) * dane -> rozmiar_tablicy);
+    for (i = 0; i < dane->rozmiar_tablicy; i++)
+        dane->tab[i] = temp[i];
+    free(temp);
     return 1;
 }
 
@@ -355,7 +348,8 @@ void usun_tablice(dane_do_wyswietlenia *dane)
 void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
     int i;
-    dane->rozmiar_tablicy = p->fp * (double)dane->czas;
+    if (!dane->czy_odfiltrowany)
+        dane->rozmiar_tablicy = p->fp * (double)dane->czas;
 
     for (i = 0; i < dane->rozmiar_tablicy; i++)
     {
