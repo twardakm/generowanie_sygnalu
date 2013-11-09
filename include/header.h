@@ -7,6 +7,8 @@
 #include <time.h>
 #include <string.h>
 
+#include "wektor.h"
+
 #define MAX_FILE_LENGHT 30
 
 typedef struct
@@ -22,6 +24,7 @@ typedef struct
     double *tab; //tablica przechowywania danych
     double czas;
     int rozmiar_tablicy;
+    int pozycja;
     int czy_zaszumiony;
     int czy_odfiltrowany;
 
@@ -31,11 +34,19 @@ typedef struct
     struct tm *data;
 } dane_do_wyswietlenia;
 
+void init_dane_do_wyswietlenia(dane_do_wyswietlenia *dane);
+//-----------------------------------------------------------------------
+void push(dane_do_wyswietlenia *dane, double t); //wrzucam t na koniec tablicy
+double pop(dane_do_wyswietlenia *dane); //odczytuje i usuwa ostatni element
+int size(dane_do_wyswietlenia *dane); //zwraca ilość elementów (pozycję)
+double at(dane_do_wyswietlenia *dane, int pos); //zwróć element na danej pozycji
+//-----------------------------------------------------------------------
+
 void wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane);
 void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 void wiadomosc_powitalna();
 void wiadomosc_dzialanie_sygnal();
-void utworz_tablice(parametry *p, dane_do_wyswietlenia *dane);
+void pobierz_czas_generowania(parametry *p, dane_do_wyswietlenia *dane);
 void usun_tablice(dane_do_wyswietlenia *dane);
 void generuj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 int filtruj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
@@ -52,7 +63,7 @@ int sprawdz_czy_komentarz(dane_do_wyswietlenia *dane);
 
 void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
-    utworz_tablice(p, dane);
+    pobierz_czas_generowania(p, dane);
     generuj_sygnal(p, dane);
 
     while (getchar() != '\n') {}
@@ -295,22 +306,29 @@ int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane)
         return 0;
     }
 
-    procent /= 100.;
+    procent /= 100.; //później procent używany jako tymczasowa zmienna
 
     temp = p->amplituda * procent;
-    for (i = 0; i < dane->rozmiar_tablicy; i++)
+    for (dane->pozycja = 0; dane->pozycja < dane->rozmiar_tablicy; dane->pozycja++)
     {
-        dane->tab[i] += temp / 2.;
-        dane->tab[i] -= (double)((rand() % (int)(temp*1000))/1000.);
+        procent = at(dane, dane->pozycja);
+        push(dane, procent + temp / 2. - (double)((rand() % (int)(temp*1000))/1000.));
     }
     return 1;
 }
 
-int filtruj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
+int filtruj_sygnal(parametry *p, dane_do_wyswietlenia *dane) //do przepisania
 {
-    int wsp, i, j; //współczynnik uśredniania
+    int wsp, miejsce, i, j; //współczynnik uśredniania
     printf("Filtrowanie sygnału\nZ ilu próbek uśrednić: ");
     scanf ("%d", &wsp);
+    printf("Na którym miejscu wstawiać uśrednioną wartość: ");
+    scanf("%d", &miejsce);
+    if (miejsce < 1 || miejsce > wsp)
+    {
+        printf("Musisz podać z przedziału od 1 do %d\n", wsp);
+        return 0;
+    }
 
     double *temp;
     temp = malloc(sizeof(double) * (int)(dane->rozmiar_tablicy - 1 - (int)(wsp / 2))); //-1 bo tablica liczy się od 0
@@ -329,12 +347,10 @@ int filtruj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
     return 1;
 }
 
-void utworz_tablice(parametry *p, dane_do_wyswietlenia *dane)
+void pobierz_czas_generowania(parametry *p, dane_do_wyswietlenia *dane)
 {
     printf("Podaj czas generowania sygnału [s]:");
     scanf("%lf", &dane->czas);
-    dane->rozmiar_tablicy = (int)(p->fp * dane->czas);
-    dane->tab = ((double *)malloc(sizeof(double) * dane->rozmiar_tablicy)); //rozmiar tablicy częstotliwość próbkowania * czas
     dane->data = malloc(sizeof(struct tm));
     dane->czy_odfiltrowany = 0;
     dane->czy_zaszumiony = 0;
@@ -353,7 +369,7 @@ void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 
     for (i = 0; i < dane->rozmiar_tablicy; i++)
     {
-        printf("%.4f \n", dane->tab[i]);
+        printf("%.4f \n", at(dane, i));
     }
 }
 
@@ -381,9 +397,10 @@ void pobierz_dane(parametry *p)
 void generuj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
     int i = 0;
-    for (i = 0; i < dane->rozmiar_tablicy; i++)
+    int ile = dane->czas * p->fp;
+    for (i = 0; i < ile; i++)
     {
-        dane->tab[i] = p->amplituda * sin((M_PI*p->fs/p->fp)*i + p->fi);
+        push(dane,p->amplituda * sin((2*M_PI*p->fs/p->fp)*i + p->fi));
     }
 }
 

@@ -1,4 +1,6 @@
 #define _USE_MATH_DEFINES
+
+#include "include/wektor.h"
 #include "include/header.h"
 
 int main(void)
@@ -11,6 +13,7 @@ int main(void)
     srand (time(NULL)); //inicjalizacja pseudolosowania
 
     ustaw_kodowanie(); //konieczne do wyświetlenia polskich znaków w Windows
+    init_dane_do_wyswietlenia(dane); //inicjalizuje dynamiczną tablicę
 
     wybierz_dzialanie_powitalne(p, dane);
 
