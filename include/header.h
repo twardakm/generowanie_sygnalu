@@ -464,7 +464,11 @@ void wyswietl_sygnal_gnuplot(parametry *p, dane_do_wyswietlenia *dane)
         perror("Nie udało się otworzyć pliku dla gnuplot\n");
         return;
     }
+#ifdef WIN32
+    if((dane->gnuplot = _popen("pgnuplot -persist", "w")) == NULL)
+#else
     if((dane->gnuplot = popen("gnuplot -persistent", "w")) == NULL)
+#endif
     {
         perror("Nie znaleziono gnuplot\n");
         return;
@@ -479,7 +483,11 @@ void wyswietl_sygnal_gnuplot(parametry *p, dane_do_wyswietlenia *dane)
 
     fflush(dane->gnuplot);
     fclose(dane->plik);
-    fclose(dane->gnuplot);
+#ifdef WIN32
+    _pclose(dane->gnuplot);
+#else
+    pclose(dane->gnuplot);
+#endif
 }
 
 void ustaw_kodowanie()
