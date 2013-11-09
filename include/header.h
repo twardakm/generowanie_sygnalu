@@ -384,10 +384,10 @@ void usun_tablice(dane_do_wyswietlenia *dane)
 void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
     int i;
-    if (!dane->czy_odfiltrowany)
-        dane->rozmiar_tablicy = p->fp * (double)dane->czas;
+    /*if (!dane->czy_odfiltrowany)
+        dane->rozmiar_tablicy = p->fp * (double)dane->czas;*/
 
-    for (i = 0; i < dane->rozmiar_tablicy; i++)
+    for (i = 0; i < size(dane); i++)
     {
         printf("%.4f \n", at(dane, i));
     }
@@ -417,7 +417,11 @@ void pobierz_dane(parametry *p)
 void generuj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
     int i = 0;
+    int wielkosc = size(dane);
     int ile = dane->czas * p->fp;
+    //zerowanie tablicy
+    for (i = 0; i < wielkosc; i++)
+        pop(dane);
     for (i = 0; i < ile; i++)
     {
         push(dane,p->amplituda * sin((2*M_PI*p->fs/p->fp)*i + p->fi));
