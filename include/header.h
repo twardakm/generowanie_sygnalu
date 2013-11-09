@@ -479,7 +479,7 @@ void wyswietl_sygnal_gnuplot(parametry *p, dane_do_wyswietlenia *dane)
     //komendy dla gnuplot
     fprintf(dane->gnuplot,
             "set title \"Sygnał\" \n"
-            "plot \"gnuplot.temp\" \n");
+            "plot \"gnuplot.temp\" pt 7 ps 0.5 \n");
 
     fflush(dane->gnuplot);
     fclose(dane->plik);
