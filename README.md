@@ -2,6 +2,7 @@ generowanie_sygnalu
 ===================
 
 Generowanie sygnału
+https://github.com/twardakm/generowanie_sygnalu.git
 
 Generuje sygnal o zadanych parametrach. Dziala na Windows i Linux. Aby wyswietlac sygnaly za pomoca gnuplot nalezy:
 
