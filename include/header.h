@@ -30,6 +30,7 @@ typedef struct
 
     //obsługa plików
     FILE *plik;
+    FILE *gnuplot;
     char nazwa_pliku[MAX_FILE_LENGHT];
     struct tm *data;
     int czy_z_pliku;
@@ -54,6 +55,7 @@ void generuj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 int filtruj_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 void pobierz_dane(parametry *p);
 void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane);
+void wyswietl_sygnal_gnuplot(parametry *p, dane_do_wyswietlenia *dane);
 void wygeneruj_date(char *dzien_miesaca, char *miesiac, char *rok, dane_do_wyswietlenia *dane);
 int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane);
 int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane);
@@ -99,6 +101,9 @@ void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane)
                 dane->czy_odfiltrowany = filtruj_sygnal(p, dane);
                 wyswietl_sygnal(p, dane);
             }
+            break;
+        case '5':
+            wyswietl_sygnal_gnuplot(p, dane);
             break;
         case '0':
             while (getchar() != '\n') {}
@@ -146,6 +151,7 @@ void wiadomosc_dzialanie_sygnal()
            "2 - Zapisz do pliku\n"
            "3 - Zaszum sygnał\n"
            "4 - Odfiltruj sygnał\n"
+           "5 - Wyświetl sygnał za pomocą gnuplot\n"
            "0 - Powrót\n");
 }
 
@@ -445,6 +451,33 @@ void wyswietl_sygnal(parametry *p, dane_do_wyswietlenia *dane)
     {
         printf("%.4f \n", at(dane, i));
     }
+}
+
+void wyswietl_sygnal_gnuplot(parametry *p, dane_do_wyswietlenia *dane)
+{
+    if((dane->plik = fopen("gnuplot.temp", "w")) == NULL)
+    {
+        perror("Nie udało się otworzyć pliku dla gnuplot\n");
+        return;
+    }
+    if((dane->gnuplot = popen("gnuplot -persistent", "w")) == NULL)
+    {
+        perror("Nie znaleziono gnuplot\n");
+        return;
+    }
+    int ilosc_danych = size(dane);
+    wyzeruj(dane);
+    int i;
+    for (i = 0; i < ilosc_danych; i++)
+        fprintf(dane->plik, "%.4f %.4f \n", (double)(1./p->fp*i), at(dane, i));
+    //komendy dla gnuplot
+    fprintf(dane->gnuplot,
+            "set title \"Sygnał\" \n"
+            "plot \"gnuplot.temp\" \n");
+
+    fflush(dane->gnuplot);
+    fclose(dane->plik);
+    fclose(dane->gnuplot);
 }
 
 void ustaw_kodowanie()
