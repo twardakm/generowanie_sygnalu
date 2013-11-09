@@ -14,6 +14,5 @@ Generuje sygnal o zadanych parametrach. Dziala na Windows i Linux. Aby wyswietla
   - przy instalacji wazne jest aby zaznaczyc dodanie programu do zmiennej systemowej PATH
   
 Projekt oparty jest o CMake. Aby skompilowac:
-1) Na Linuxie
-2) Na Windowsie (Windows 7 z QtCreatorem - zestaw narzedzi: MinGW 4.8)
+Na Linuxie oraz na Windowsie (Windows 7 z QtCreatorem - zestaw narzedzi: MinGW 4.8)
   W QtCreatorze Plik->Otworz plik lub projekt. Nalezy zaznaczy plik Cmake i kliknac zbuduj
