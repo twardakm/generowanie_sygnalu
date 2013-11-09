@@ -128,6 +128,8 @@ void wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane)
         case '1':
             pobierz_dane(p);
             dane->czy_z_pliku = 0;
+            dane->czy_odfiltrowany = 0;
+            dane->czy_zaszumiony = 0;
             wybierz_dzialanie_sygnal(p, dane);
             break;
         case '2':
@@ -356,6 +358,7 @@ int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
     double procent, temp; //jak bardzo ma być zaszumiony sygnał
     int i;
+    int ile = size(dane);
 #ifdef WIN32
     printf("Podaj w %c wartość zaszumienia: (powyżej 0)\n", 37);
 #else
@@ -370,11 +373,12 @@ int zaszum_sygnal(parametry *p, dane_do_wyswietlenia *dane)
     }
 
     procent /= 100.; //później procent używany jako tymczasowa zmienna
+    wyzeruj(dane);
 
     temp = p->amplituda * procent;
-    for (dane->pozycja = 0; dane->pozycja < dane->rozmiar_tablicy; dane->pozycja++)
+    for (i = 0; i < ile; i++)
     {
-        procent = at(dane, dane->pozycja);
+        procent = at(dane, i);
         push(dane, procent + temp / 2. - (double)((rand() % (int)(temp*1000))/1000.));
     }
     return 1;
@@ -465,10 +469,8 @@ void wyswietl_sygnal_gnuplot(parametry *p, dane_do_wyswietlenia *dane)
         perror("Nie znaleziono gnuplot\n");
         return;
     }
-    int ilosc_danych = size(dane);
-    wyzeruj(dane);
     int i;
-    for (i = 0; i < ilosc_danych; i++)
+    for (i = 0; i < size(dane); i++)
         fprintf(dane->plik, "%.4f %.4f \n", (double)(1./p->fp*i), at(dane, i));
     //komendy dla gnuplot
     fprintf(dane->gnuplot,
