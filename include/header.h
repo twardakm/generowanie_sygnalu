@@ -329,21 +329,41 @@ int filtruj_sygnal(parametry *p, dane_do_wyswietlenia *dane) //do przepisania
         printf("Musisz podać z przedziału od 1 do %d\n", wsp);
         return 0;
     }
+    miejsce--; //ponieważ użytkownik podaje od 1 a tablica liczona jest od 0
+    int ilosc_danych = size(dane);
 
-    double *temp;
-    temp = malloc(sizeof(double) * (int)(dane->rozmiar_tablicy - 1 - (int)(wsp / 2))); //-1 bo tablica liczy się od 0
-    for (i = 0; i < (int)(dane->rozmiar_tablicy - 1) - (int)(wsp / 2); i++)
+    for (i = ilosc_danych - 1; i >= 0; i--) //zerowanie miejsca
+        pop(dane);
+
+    double temp = 0;
+
+    for (i = 0 ; i < miejsce ; i++) //pętla do wstawiania nietypowych wartości na początku
     {
-        temp[i] = 0;
-        for (j = i; j < i + wsp; j++)
-            temp[i] += dane->tab[j];
-        temp[i] /= wsp;
+        temp = 0;
+        for (j = 0; j < wsp; j++)
+            temp += at(dane, j);
+        temp /= (double)wsp;
+        push(dane, temp);
     }
-    dane->rozmiar_tablicy = dane->rozmiar_tablicy - 1 - (int)(wsp / 2);
-    dane->tab = realloc(dane->tab, sizeof(double) * dane -> rozmiar_tablicy);
-    for (i = 0; i < dane->rozmiar_tablicy; i++)
-        dane->tab[i] = temp[i];
-    free(temp);
+    //pętla główna
+    for (i; i < ilosc_danych - wsp + miejsce; i++)
+    {
+        temp = 0;
+        for (j = i - miejsce; j < i - miejsce + wsp; j++)
+            temp += at(dane, j);
+        temp /= (double)wsp;
+        push(dane, temp);
+    }
+    //pętla końcowa
+    for (i ; i < ilosc_danych ; i++)
+    {
+        temp = 0;
+        for (j = ilosc_danych - wsp; j < ilosc_danych; j++)
+            temp += at(dane, j);
+        temp /= (double)wsp;
+        push(dane, temp);
+    }
+
     return 1;
 }
 
