@@ -28,6 +28,10 @@ void init_dane_do_wyswietlenia(dane_do_wyswietlenia *dane)
     dane->rozmiar_tablicy = MAKS_rozmiar_tablicy;
     dane->tab = malloc(sizeof (double) * dane->rozmiar_tablicy);
     dane->pozycja = 0;
+    dane->data = malloc(sizeof(struct tm));
+    dane->czy_odfiltrowany = 0;
+    dane->czy_zaszumiony = 0;
+    dane->czy_z_pliku = 0;
 
     return;
 }

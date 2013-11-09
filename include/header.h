@@ -32,8 +32,10 @@ typedef struct
     FILE *plik;
     char nazwa_pliku[MAX_FILE_LENGHT];
     struct tm *data;
+    int czy_z_pliku;
 } dane_do_wyswietlenia;
 
+void wyzeruj(dane_do_wyswietlenia *dane);
 void init_dane_do_wyswietlenia(dane_do_wyswietlenia *dane);
 //-----------------------------------------------------------------------
 void push(dane_do_wyswietlenia *dane, double t); //wrzucam t na koniec tablicy
@@ -63,8 +65,11 @@ int sprawdz_czy_komentarz(dane_do_wyswietlenia *dane);
 
 void wybierz_dzialanie_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
-    pobierz_czas_generowania(p, dane);
-    generuj_sygnal(p, dane);
+    if (!dane->czy_z_pliku) //jeśli nie jest z pliku trzeba podać czas
+    {
+        pobierz_czas_generowania(p, dane);
+        generuj_sygnal(p, dane);
+    }
 
     while (getchar() != '\n') {}
     wiadomosc_dzialanie_sygnal();
@@ -117,10 +122,11 @@ void wybierz_dzialanie_powitalne(parametry *p, dane_do_wyswietlenia *dane)
         {
         case '1':
             pobierz_dane(p);
+            dane->czy_z_pliku = 0;
             wybierz_dzialanie_sygnal(p, dane);
             break;
         case '2':
-            if (!odczytaj_sygnal(p, dane))
+            if (!odczytaj_sygnal(p, dane)) // to oznacza że jest równy 0 czyli wykonał się poprawnie
                 wybierz_dzialanie_sygnal(p, dane);
             break;
         case '0':
@@ -184,52 +190,99 @@ int odczytaj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 
     //odczyt daty
     if (sprawdz_czy_komentarz(dane)) // różna od 0 to błąd
-        return;
+    {
+        fclose(dane->plik);
+        dane->czy_z_pliku = 0;
+        return 1;
+    }
     printf("Data wygenerowania sygnału:\t");
     while ((ctemp = fgetc(dane->plik)) != '\n')
         printf("%c", ctemp);
     //odczyt amplitudy
     if (sprawdz_czy_komentarz(dane)) // różna od 0 to błąd
-        return;
+    {
+        fclose(dane->plik);
+        dane->czy_z_pliku = 0;
+        return 1;
+    }
     printf("\nAmplituda:\t\t\t");
     while(fgetc(dane->plik) != '\t') {} //usunięcie z pliku
     fscanf(dane->plik, "%lf", &p->amplituda);
     printf("%.4f", p->amplituda);
     //odczyt częstotliwości sygnału
     if (sprawdz_czy_komentarz(dane)) // różna od 0 to błąd
-        return;
+    {
+        fclose(dane->plik);
+        dane->czy_z_pliku = 0;
+        return 1;
+    }
     printf("\nCzęstotliwość sygnału:\t\t");
     while(fgetc(dane->plik) != '\t') {} //usunięcie z pliku
     fscanf(dane->plik, "%lf", &p->fs);
     printf("%.4f", p->fs);
     //odczyt częstotliwości próbkowania
     if (sprawdz_czy_komentarz(dane)) // różna od 0 to błąd
-        return;
+    {
+        fclose(dane->plik);
+        dane->czy_z_pliku = 0;
+        return 1;
+    }
     printf("\nCzęstotliwość próbkowania:\t");
     while(fgetc(dane->plik) != '\t') {} //usunięcie z pliku
     fscanf(dane->plik, "%lf", &p->fp);
     printf("%.4f", p->fp);
     //odczyt przesunięcia fazowego
     if (sprawdz_czy_komentarz(dane)) // różna od 0 to błąd
-        return;
+    {
+        fclose(dane->plik);
+        dane->czy_z_pliku = 0;
+        return 1;
+    }
     printf("\nPrzesunięcie fazowe:\t\t");
     while(fgetc(dane->plik) != '\t') {} //usunięcie z pliku
     fscanf(dane->plik, "%lf", &p->fi);
     printf("%.4f\n", p->fi);
 
+    wyzeruj(dane);
+
+    double temp;
+
+    while( 1 )
+    {
+        if(sprawdz_czy_komentarz(dane) == 2)
+        {
+            fclose(dane->plik);
+            dane->czy_z_pliku = 1;
+            return 0;
+        }
+        else if(sprawdz_czy_komentarz(dane)) // różna od 0 to błąd, bądź EOF (wtedy bez wyświetlenia błędu)
+        {
+            fclose(dane->plik);
+            dane->czy_z_pliku = 0;
+            return 1;
+        }
+        fscanf(dane->plik, "%lf", &temp);
+        push (dane, temp);
+    }
+
     fclose(dane->plik);
+    dane->czy_z_pliku = 1;
 
     return 0;
 }
 
 int sprawdz_czy_komentarz(dane_do_wyswietlenia *dane)
 {
-    while (fgetc(dane->plik) == '#')
+    char c = fgetc(dane->plik);
+    while (c == '#')
     {
         while(fgetc(dane->plik) != '\n') {} // żeby przeszkoczyć całą linię
+        c = fgetc(dane->plik);
     }
-    if (!fseek(dane->plik, ftell(dane->plik) - 1, SEEK_SET))
+    if (!fseek(dane->plik, ftell(dane->plik) - 1, SEEK_SET) && c != EOF)
         return 0;
+    else if (c == EOF)
+        return 2;
     else
     {
         printf("Błąd odczyt z pliku\n");
@@ -255,13 +308,17 @@ int zapisz_sygnal(parametry *p, dane_do_wyswietlenia *dane)
         return 1;
     }
     wygeneruj_date(dzien_miesiaca, miesiac, rok, dane);
-
+    //zapisywanie parametrów
     fprintf(dane->plik, "# Sygnał wygenerowano dnia:\n%s.%s.%s\n"
             "amplituda:\t%.4f\n"
             "czest. sygn.:\t%.4f\n"
             "czest. prob.:\t%.4f\n"
             "przesuniecie:\t%.4f\n",
             dzien_miesiaca, miesiac, rok, p->amplituda, p->fs, p->fp, p->fi);
+    //zapisywanie sygnału
+    int i;
+    for(i = 0; i < size(dane); i++)
+        fprintf(dane->plik, "%.4f\n", at(dane, i));
     fclose(dane->plik);
     if (ferror(dane->plik))
     {
@@ -371,9 +428,6 @@ void pobierz_czas_generowania(parametry *p, dane_do_wyswietlenia *dane)
 {
     printf("Podaj czas generowania sygnału [s]:");
     scanf("%lf", &dane->czas);
-    dane->data = malloc(sizeof(struct tm));
-    dane->czy_odfiltrowany = 0;
-    dane->czy_zaszumiony = 0;
 }
 
 void usun_tablice(dane_do_wyswietlenia *dane)
@@ -417,15 +471,21 @@ void pobierz_dane(parametry *p)
 void generuj_sygnal(parametry *p, dane_do_wyswietlenia *dane)
 {
     int i = 0;
-    int wielkosc = size(dane);
     int ile = dane->czas * p->fp;
-    //zerowanie tablicy
-    for (i = 0; i < wielkosc; i++)
-        pop(dane);
+    wyzeruj(dane);
     for (i = 0; i < ile; i++)
     {
         push(dane,p->amplituda * sin((2*M_PI*p->fs/p->fp)*i + p->fi));
     }
+}
+
+void wyzeruj(dane_do_wyswietlenia *dane)
+{
+    int i;
+    int wielkosc = size(dane);
+    //zerowanie tablicy
+    for (i = 0; i < wielkosc; i++)
+        pop(dane);
 }
 
 #endif // HEADER_H
